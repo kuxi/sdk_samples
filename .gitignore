@@ -1,3 +1,4 @@
-
+*.o
 *.opendb
 *.db
+AppEncLowLatency

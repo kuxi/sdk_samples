@@ -72,7 +72,7 @@ public:
             }
         }
 
-        if (bLowLatency) guidPreset = NV_ENC_PRESET_LOW_LATENCY_DEFAULT_GUID;
+        if (bLowLatency) guidPreset = NV_ENC_PRESET_P4_GUID;
     }
     virtual ~NvEncoderInitParam() {}
     virtual bool IsCodecH264() {
@@ -137,7 +137,7 @@ public:
             << std::endl << "\tpreset       : " << ConvertValueToString(vPreset, szPresetNames, pParams->presetGUID)
             << std::endl << "\tprofile      : " << ConvertValueToString(vProfile, szProfileNames, pParams->encodeConfig->profileGUID)
             << std::endl << "\tchroma       : " << ConvertValueToString(vChroma, szChromaNames, (pParams->encodeGUID == NV_ENC_CODEC_H264_GUID) ? pParams->encodeConfig->encodeCodecConfig.h264Config.chromaFormatIDC : pParams->encodeConfig->encodeCodecConfig.hevcConfig.chromaFormatIDC)
-            << std::endl << "\tbitdepth     : " << ((pParams->encodeGUID == NV_ENC_CODEC_H264_GUID) ? 0 : pParams->encodeConfig->encodeCodecConfig.hevcConfig.pixelBitDepthMinus8) + 8
+            << std::endl << "\tbitdepth     : " << ((pParams->encodeGUID == NV_ENC_CODEC_H264_GUID) ? 0 : pParams->encodeConfig->encodeCodecConfig.hevcConfig.outputBitDepth)
             << std::endl << "\trc           : " << ConvertValueToString(vRcMode, szRcModeNames, pParams->encodeConfig->rcParams.rateControlMode)
             ;
             if (pParams->encodeConfig->rcParams.rateControlMode == NV_ENC_PARAMS_RC_CONSTQP) {
@@ -239,7 +239,7 @@ public:
         {
             if (eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV420_10BIT || eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444_10BIT)
             {
-                config.encodeCodecConfig.hevcConfig.pixelBitDepthMinus8 = 2;
+                config.encodeCodecConfig.hevcConfig.outputBitDepth = NV_ENC_BIT_DEPTH_10;
             }
         }
 
@@ -325,7 +325,7 @@ private:
     std::function<void(NV_ENC_INITIALIZE_PARAMS *pParams)> funcInit = [](NV_ENC_INITIALIZE_PARAMS *pParams){};
     std::vector<std::string> tokens;
     GUID guidCodec = NV_ENC_CODEC_H264_GUID;
-    GUID guidPreset = NV_ENC_PRESET_DEFAULT_GUID;
+    GUID guidPreset = NV_ENC_PRESET_P5_GUID;
     bool bLowLatency = false;
     
     const char *szCodecNames = "h264 hevc";
@@ -343,21 +343,21 @@ private:
     const char *szPresetNames = "default hp hq bd ll ll_hp ll_hq lossless lossless_hp";
     const char *szLowLatencyPresetNames = "ll ll_hp ll_hq";
     std::vector<GUID> vPreset = std::vector<GUID> {
-        NV_ENC_PRESET_DEFAULT_GUID,
-        NV_ENC_PRESET_HP_GUID,
-        NV_ENC_PRESET_HQ_GUID,
-        NV_ENC_PRESET_BD_GUID,
-        NV_ENC_PRESET_LOW_LATENCY_DEFAULT_GUID,
-        NV_ENC_PRESET_LOW_LATENCY_HP_GUID,
-        NV_ENC_PRESET_LOW_LATENCY_HQ_GUID,
-        NV_ENC_PRESET_LOSSLESS_DEFAULT_GUID,
-        NV_ENC_PRESET_LOSSLESS_HP_GUID
+        NV_ENC_PRESET_P5_GUID,
+        NV_ENC_PRESET_P1_GUID,
+        NV_ENC_PRESET_P6_GUID,
+        NV_ENC_PRESET_P5_GUID,
+        NV_ENC_PRESET_P4_GUID,
+        NV_ENC_PRESET_P2_GUID,
+        NV_ENC_PRESET_P5_GUID,
+        NV_ENC_PRESET_P5_GUID,
+        NV_ENC_PRESET_P3_GUID
     };
 
     std::vector<GUID> vLowLatencyPreset = std::vector<GUID> {
-            NV_ENC_PRESET_LOW_LATENCY_DEFAULT_GUID,
-            NV_ENC_PRESET_LOW_LATENCY_HP_GUID,
-            NV_ENC_PRESET_LOW_LATENCY_HQ_GUID,
+            NV_ENC_PRESET_P4_GUID,
+            NV_ENC_PRESET_P2_GUID,
+            NV_ENC_PRESET_P5_GUID,
     };
 
     const char *szH264ProfileNames = "baseline main high high444";
@@ -374,7 +374,7 @@ private:
         NV_ENC_HEVC_PROFILE_FREXT_GUID,
     };
     const char *szProfileNames = "(default) auto baseline(h264) main(h264) high(h264) high444(h264)"
-        " stereo(h264) svc_temporal_scalability(h264) progressiv_high(h264) constrained_high(h264)"
+        " stereo(h264) progressiv_high(h264) constrained_high(h264)"
         " main(hevc) main10(hevc) frext(hevc)";
     std::vector<GUID> vProfile = std::vector<GUID> {
         GUID{},
@@ -384,7 +384,6 @@ private:
         NV_ENC_H264_PROFILE_HIGH_GUID,
         NV_ENC_H264_PROFILE_HIGH_444_GUID,
         NV_ENC_H264_PROFILE_STEREO_GUID,
-        NV_ENC_H264_PROFILE_SVC_TEMPORAL_SCALABILTY,
         NV_ENC_H264_PROFILE_PROGRESSIVE_HIGH_GUID,
         NV_ENC_H264_PROFILE_CONSTRAINED_HIGH_GUID,
         NV_ENC_HEVC_PROFILE_MAIN_GUID,
@@ -392,14 +391,11 @@ private:
         NV_ENC_HEVC_PROFILE_FREXT_GUID,
     };
 
-    const char *szRcModeNames = "constqp vbr cbr cbr_ll_hq cbr_hq vbr_hq";
+    const char *szRcModeNames = "constqp vbr cbr";
     std::vector<NV_ENC_PARAMS_RC_MODE> vRcMode = std::vector<NV_ENC_PARAMS_RC_MODE> {
         NV_ENC_PARAMS_RC_CONSTQP,
         NV_ENC_PARAMS_RC_VBR,
         NV_ENC_PARAMS_RC_CBR,
-        NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ,
-        NV_ENC_PARAMS_RC_CBR_HQ,
-        NV_ENC_PARAMS_RC_VBR_HQ,
     };
 
     const char *szQpMapModeNames = "disabled emphasis_level_map delta_qp_map qp_map";
@@ -541,7 +537,7 @@ public:
             << "    repeatSPSPPS: " << pConfig->encodeCodecConfig.hevcConfig.repeatSPSPPS << std::endl
             << "    enableIntraRefresh: " << pConfig->encodeCodecConfig.hevcConfig.enableIntraRefresh << std::endl
             << "    chromaFormatIDC: " << pConfig->encodeCodecConfig.hevcConfig.chromaFormatIDC << std::endl
-            << "    pixelBitDepthMinus8: " << pConfig->encodeCodecConfig.hevcConfig.pixelBitDepthMinus8 << std::endl
+            << "    outputBitDepth: " << pConfig->encodeCodecConfig.hevcConfig.outputBitDepth << std::endl
             << "    idrPeriod: " << pConfig->encodeCodecConfig.hevcConfig.idrPeriod << std::endl
             << "    intraRefreshPeriod: " << pConfig->encodeCodecConfig.hevcConfig.intraRefreshPeriod << std::endl
             << "    intraRefreshCnt: " << pConfig->encodeCodecConfig.hevcConfig.intraRefreshCnt << std::endl

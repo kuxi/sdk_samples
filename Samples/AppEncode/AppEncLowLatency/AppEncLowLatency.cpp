@@ -57,7 +57,7 @@ void EncodeLowLatency(CUcontext cuContext, char *szInFilePath, int nWidth, int n
         encodeConfig.encodeCodecConfig.hevcConfig.idrPeriod = NVENC_INFINITE_GOPLENGTH;
     }
 
-    encodeConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ;
+    encodeConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR;
     encodeConfig.rcParams.averageBitRate = (static_cast<unsigned int>(5.0f * initializeParams.encodeWidth * initializeParams.encodeHeight) / (1280 * 720)) * 100000;
     encodeConfig.rcParams.vbvBufferSize = (encodeConfig.rcParams.averageBitRate * initializeParams.frameRateDen / initializeParams.frameRateNum) * 5;
     encodeConfig.rcParams.maxBitRate = encodeConfig.rcParams.averageBitRate;
@@ -182,7 +182,7 @@ void EncodeLowLatencyDRC(CUcontext cuContext, char *szInFilePath, int nWidth, in
             encodeConfig.encodeCodecConfig.hevcConfig.idrPeriod = NVENC_INFINITE_GOPLENGTH;
         }
 
-        encodeConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ;
+        encodeConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR;
         encodeConfig.rcParams.averageBitRate = (static_cast<unsigned int>(5.0f * initializeParams.encodeWidth * initializeParams.encodeHeight) / (1280 * 720)) * 1000000;
         encodeConfig.rcParams.vbvBufferSize = (encodeConfig.rcParams.averageBitRate * initializeParams.frameRateDen / initializeParams.frameRateNum) * 5;
         encodeConfig.rcParams.maxBitRate = encodeConfig.rcParams.averageBitRate;
