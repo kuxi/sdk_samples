@@ -141,6 +141,10 @@ public:
     */
     int GetCapabilityValue(GUID guidCodec, NV_ENC_CAPS capsToQuery);
 
+    bool ValidateGUIDs(GUID guidCodec, GUID presetGuid);
+
+    void PrintCapabilities(GUID guidCodec);
+
     /**
     *  @brief  This function is used to get the current device on which encoder is running.
     */

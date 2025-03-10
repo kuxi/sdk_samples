@@ -251,6 +251,12 @@ void NvEncoder::CreateEncoder(const NV_ENC_INITIALIZE_PARAMS* pEncoderParams)
             NVENC_THROW_ERROR("Invalid ChromaFormatIDC", NV_ENC_ERR_INVALID_PARAM);
         }
     }
+    if (!ValidateGUIDs(pEncoderParams->encodeGUID, pEncoderParams->presetGUID)) {
+        NVENC_THROW_ERROR("Invalid guids in use", NV_ENC_ERR_INVALID_PARAM);
+    }
+
+    PrintCapabilities(pEncoderParams->encodeGUID);
+
 
     memcpy(&m_initializeParams, pEncoderParams, sizeof(m_initializeParams));
     m_initializeParams.version = NV_ENC_INITIALIZE_PARAMS_VER;
@@ -789,6 +795,262 @@ uint32_t NvEncoder::GetChromaWidthInBytes(const NV_ENC_BUFFER_FORMAT bufferForma
     default:
         NVENC_THROW_ERROR("Invalid Buffer format", NV_ENC_ERR_INVALID_PARAM);
         return 0;
+    }
+}
+
+bool NvEncoder::ValidateGUIDs(GUID guidCodec, GUID presetGuid) {
+    if (!m_hEncoder)
+    {
+        return 0;
+    }
+    uint32_t guidCount, outCount, presetCount;
+    GUID* guids;
+    GUID* presets;
+
+    NVENC_API_CALL(m_nvenc.nvEncGetEncodeGUIDCount(m_hEncoder, &guidCount));
+    guids = new GUID[guidCount];
+    NVENC_API_CALL(m_nvenc.nvEncGetEncodeGUIDs(m_hEncoder, guids, guidCount, &outCount));
+    if (guidCount != outCount) {
+        std::cout << "outCount (" << outCount << ") did not match guidCount (" << guidCount << ")" << std::endl;
+        delete[] guids;
+        return false;
+    }
+    bool foundEncoderGuid = false;
+    bool foundPresetGuid = false;
+    for (int i = 0; i < guidCount; i++) {
+        if (guids[i] == guidCodec) {
+            foundEncoderGuid = true;
+            break;
+        }
+    }
+    delete[] guids;
+    if (!foundEncoderGuid) {
+        std::cout << "Could not find encoder guid" << std::endl;
+        return false;
+    }
+
+    NVENC_API_CALL(m_nvenc.nvEncGetEncodePresetCount(m_hEncoder, guidCodec, &presetCount));
+    presets = new GUID[presetCount];
+    outCount = 0;
+    NVENC_API_CALL(m_nvenc.nvEncGetEncodePresetGUIDs(m_hEncoder, guidCodec, presets, presetCount, &outCount));
+    if (presetCount != outCount) {
+        std::cout << "outCount (" << outCount << ") did not match presetCount (" << presetCount << ")" << std::endl;
+        delete[] guids;
+        return false;
+    }
+    for (int i = 0; i < presetCount; i++) {
+        if (presets[i] == presetGuid) {
+            foundPresetGuid = true;
+            break;
+        }
+    }
+    delete[] guids;
+
+    if (!foundPresetGuid) {
+        std::cout << "Could not find preset guid" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+std::string CapName(NV_ENC_CAPS cap) {
+    switch (cap) {
+        case NV_ENC_CAPS_NUM_MAX_BFRAMES:
+            return "NV_ENC_CAPS_NUM_MAX_BFRAMES";
+            break;
+        case NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES:
+            return "NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES";
+            break;
+        case NV_ENC_CAPS_SUPPORT_FIELD_ENCODING:
+            return "NV_ENC_CAPS_SUPPORT_FIELD_ENCODING";
+            break;
+        case NV_ENC_CAPS_SUPPORT_MONOCHROME:
+            return "NV_ENC_CAPS_SUPPORT_MONOCHROME";
+            break;
+        case NV_ENC_CAPS_SUPPORT_FMO:
+            return "NV_ENC_CAPS_SUPPORT_FMO";
+            break;
+        case NV_ENC_CAPS_SUPPORT_QPELMV:
+            return "NV_ENC_CAPS_SUPPORT_QPELMV";
+            break;
+        case NV_ENC_CAPS_SUPPORT_BDIRECT_MODE:
+            return "NV_ENC_CAPS_SUPPORT_BDIRECT_MODE";
+            break;
+        case NV_ENC_CAPS_SUPPORT_CABAC:
+            return "NV_ENC_CAPS_SUPPORT_CABAC";
+            break;
+        case NV_ENC_CAPS_SUPPORT_ADAPTIVE_TRANSFORM:
+            return "NV_ENC_CAPS_SUPPORT_ADAPTIVE_TRANSFORM";
+            break;
+        case NV_ENC_CAPS_SUPPORT_STEREO_MVC:
+            return "NV_ENC_CAPS_SUPPORT_STEREO_MVC";
+            break;
+        case NV_ENC_CAPS_NUM_MAX_TEMPORAL_LAYERS:
+            return "NV_ENC_CAPS_NUM_MAX_TEMPORAL_LAYERS";
+            break;
+        case NV_ENC_CAPS_SUPPORT_HIERARCHICAL_PFRAMES:
+            return "NV_ENC_CAPS_SUPPORT_HIERARCHICAL_PFRAMES";
+            break;
+        case NV_ENC_CAPS_SUPPORT_HIERARCHICAL_BFRAMES:
+            return "NV_ENC_CAPS_SUPPORT_HIERARCHICAL_BFRAMES";
+            break;
+        case NV_ENC_CAPS_LEVEL_MAX:
+            return "NV_ENC_CAPS_LEVEL_MAX";
+            break;
+        case NV_ENC_CAPS_LEVEL_MIN:
+            return "NV_ENC_CAPS_LEVEL_MIN";
+            break;
+        case NV_ENC_CAPS_SEPARATE_COLOUR_PLANE:
+            return "NV_ENC_CAPS_SEPARATE_COLOUR_PLANE";
+            break;
+        case NV_ENC_CAPS_WIDTH_MAX:
+            return "NV_ENC_CAPS_WIDTH_MAX";
+            break;
+        case NV_ENC_CAPS_HEIGHT_MAX:
+            return "NV_ENC_CAPS_HEIGHT_MAX";
+            break;
+        case NV_ENC_CAPS_SUPPORT_TEMPORAL_SVC:
+            return "NV_ENC_CAPS_SUPPORT_TEMPORAL_SVC";
+            break;
+        case NV_ENC_CAPS_SUPPORT_DYN_RES_CHANGE:
+            return "NV_ENC_CAPS_SUPPORT_DYN_RES_CHANGE";
+            break;
+        case NV_ENC_CAPS_SUPPORT_DYN_BITRATE_CHANGE:
+            return "NV_ENC_CAPS_SUPPORT_DYN_BITRATE_CHANGE";
+            break;
+        case NV_ENC_CAPS_SUPPORT_DYN_FORCE_CONSTQP:
+            return "NV_ENC_CAPS_SUPPORT_DYN_FORCE_CONSTQP";
+            break;
+        case NV_ENC_CAPS_SUPPORT_DYN_RCMODE_CHANGE:
+            return "NV_ENC_CAPS_SUPPORT_DYN_RCMODE_CHANGE";
+            break;
+        case NV_ENC_CAPS_SUPPORT_SUBFRAME_READBACK:
+            return "NV_ENC_CAPS_SUPPORT_SUBFRAME_READBACK";
+            break;
+        case NV_ENC_CAPS_SUPPORT_CONSTRAINED_ENCODING:
+            return "NV_ENC_CAPS_SUPPORT_CONSTRAINED_ENCODING";
+            break;
+        case NV_ENC_CAPS_SUPPORT_INTRA_REFRESH:
+            return "NV_ENC_CAPS_SUPPORT_INTRA_REFRESH";
+            break;
+        case NV_ENC_CAPS_SUPPORT_CUSTOM_VBV_BUF_SIZE:
+            return "NV_ENC_CAPS_SUPPORT_CUSTOM_VBV_BUF_SIZE";
+            break;
+        case NV_ENC_CAPS_SUPPORT_DYNAMIC_SLICE_MODE:
+            return "NV_ENC_CAPS_SUPPORT_DYNAMIC_SLICE_MODE";
+            break;
+        case NV_ENC_CAPS_SUPPORT_REF_PIC_INVALIDATION:
+            return "NV_ENC_CAPS_SUPPORT_REF_PIC_INVALIDATION";
+            break;
+        case NV_ENC_CAPS_PREPROC_SUPPORT:
+            return "NV_ENC_CAPS_PREPROC_SUPPORT";
+            break;
+        case NV_ENC_CAPS_ASYNC_ENCODE_SUPPORT:
+            return "NV_ENC_CAPS_ASYNC_ENCODE_SUPPORT";
+            break;
+        case NV_ENC_CAPS_MB_NUM_MAX:
+            return "NV_ENC_CAPS_MB_NUM_MAX";
+            break;
+        case NV_ENC_CAPS_MB_PER_SEC_MAX:
+            return "NV_ENC_CAPS_MB_PER_SEC_MAX";
+            break;
+        case NV_ENC_CAPS_SUPPORT_YUV444_ENCODE:
+            return "NV_ENC_CAPS_SUPPORT_YUV444_ENCODE";
+            break;
+        case NV_ENC_CAPS_SUPPORT_LOSSLESS_ENCODE:
+            return "NV_ENC_CAPS_SUPPORT_LOSSLESS_ENCODE";
+            break;
+        case NV_ENC_CAPS_SUPPORT_SAO:
+            return "NV_ENC_CAPS_SUPPORT_SAO";
+            break;
+        case NV_ENC_CAPS_SUPPORT_MEONLY_MODE:
+            return "NV_ENC_CAPS_SUPPORT_MEONLY_MODE";
+            break;
+        case NV_ENC_CAPS_SUPPORT_LOOKAHEAD:
+            return "NV_ENC_CAPS_SUPPORT_LOOKAHEAD";
+            break;
+        case NV_ENC_CAPS_SUPPORT_TEMPORAL_AQ:
+            return "NV_ENC_CAPS_SUPPORT_TEMPORAL_AQ";
+            break;
+        case NV_ENC_CAPS_SUPPORT_10BIT_ENCODE:
+            return "NV_ENC_CAPS_SUPPORT_10BIT_ENCODE";
+            break;
+        case NV_ENC_CAPS_NUM_MAX_LTR_FRAMES:
+            return "NV_ENC_CAPS_NUM_MAX_LTR_FRAMES";
+            break;
+        case NV_ENC_CAPS_SUPPORT_WEIGHTED_PREDICTION:
+            return "NV_ENC_CAPS_SUPPORT_WEIGHTED_PREDICTION";
+            break;
+        case NV_ENC_CAPS_DYNAMIC_QUERY_ENCODER_CAPACITY:
+            return "NV_ENC_CAPS_DYNAMIC_QUERY_ENCODER_CAPACITY";
+            break;
+        case NV_ENC_CAPS_SUPPORT_BFRAME_REF_MODE:
+            return "NV_ENC_CAPS_SUPPORT_BFRAME_REF_MODE";
+            break;
+        case NV_ENC_CAPS_SUPPORT_EMPHASIS_LEVEL_MAP:
+            return "NV_ENC_CAPS_SUPPORT_EMPHASIS_LEVEL_MAP";
+            break;
+        case NV_ENC_CAPS_WIDTH_MIN:
+            return "NV_ENC_CAPS_WIDTH_MIN";
+            break;
+        case NV_ENC_CAPS_HEIGHT_MIN:
+            return "NV_ENC_CAPS_HEIGHT_MIN";
+            break;
+        case NV_ENC_CAPS_SUPPORT_MULTIPLE_REF_FRAMES:
+            return "NV_ENC_CAPS_SUPPORT_MULTIPLE_REF_FRAMES";
+            break;
+        case NV_ENC_CAPS_SUPPORT_ALPHA_LAYER_ENCODING:
+            return "NV_ENC_CAPS_SUPPORT_ALPHA_LAYER_ENCODING";
+            break;
+        case NV_ENC_CAPS_NUM_ENCODER_ENGINES:
+            return "NV_ENC_CAPS_NUM_ENCODER_ENGINES";
+            break;
+        case NV_ENC_CAPS_SINGLE_SLICE_INTRA_REFRESH:
+            return "NV_ENC_CAPS_SINGLE_SLICE_INTRA_REFRESH";
+            break;
+        case NV_ENC_CAPS_DISABLE_ENC_STATE_ADVANCE:
+            return "NV_ENC_CAPS_DISABLE_ENC_STATE_ADVANCE";
+            break;
+        case NV_ENC_CAPS_OUTPUT_RECON_SURFACE:
+            return "NV_ENC_CAPS_OUTPUT_RECON_SURFACE";
+            break;
+        case NV_ENC_CAPS_OUTPUT_BLOCK_STATS:
+            return "NV_ENC_CAPS_OUTPUT_BLOCK_STATS";
+            break;
+        case NV_ENC_CAPS_OUTPUT_ROW_STATS:
+            return "NV_ENC_CAPS_OUTPUT_ROW_STATS";
+            break;
+        case NV_ENC_CAPS_SUPPORT_TEMPORAL_FILTER:
+            return "NV_ENC_CAPS_SUPPORT_TEMPORAL_FILTER";
+            break;
+        case NV_ENC_CAPS_SUPPORT_LOOKAHEAD_LEVEL:
+            return "NV_ENC_CAPS_SUPPORT_LOOKAHEAD_LEVEL";
+            break;
+        case NV_ENC_CAPS_SUPPORT_UNIDIRECTIONAL_B:
+            return "NV_ENC_CAPS_SUPPORT_UNIDIRECTIONAL_B";
+            break;
+        case NV_ENC_CAPS_SUPPORT_MVHEVC_ENCODE:
+            return "NV_ENC_CAPS_SUPPORT_MVHEVC_ENCODE";
+            break;
+        case NV_ENC_CAPS_SUPPORT_YUV422_ENCODE:
+            return "NV_ENC_CAPS_SUPPORT_YUV422_ENCODE";
+            break;
+        default:
+            return "Unknown cap";
+            break;
+    }
+}
+
+void NvEncoder::PrintCapabilities(GUID guidCodec) {
+    if (!m_hEncoder)
+    {
+        std::cout << "No encoder handle" << std::endl;
+        return;
+    }
+    for (int capn = NV_ENC_CAPS_NUM_MAX_BFRAMES; capn != NV_ENC_CAPS_EXPOSED_COUNT; capn++) {
+        NV_ENC_CAPS cap = static_cast<NV_ENC_CAPS>(capn);
+        int val = GetCapabilityValue(guidCodec, cap);
+        std::cout << CapName(cap) << ": " << val << std::endl;
     }
 }
 
