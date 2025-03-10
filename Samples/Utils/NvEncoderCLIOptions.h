@@ -49,6 +49,8 @@ public:
             std::istream_iterator<std::string>() 
         };
 
+        if (bLowLatency) guidPreset = NV_ENC_PRESET_P4_GUID;
+
         for (unsigned i = 0; i < tokens.size(); i++)
         {
             if (tokens[i] == "-codec" && ++i != tokens.size())
@@ -72,7 +74,6 @@ public:
             }
         }
 
-        if (bLowLatency) guidPreset = NV_ENC_PRESET_P4_GUID;
     }
     virtual ~NvEncoderInitParam() {}
     virtual bool IsCodecH264() {
@@ -235,12 +236,19 @@ public:
             throw std::invalid_argument(errmessage.str());
         }
 
-        if (IsCodecHEVC())
         {
-            if (eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV420_10BIT || eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444_10BIT)
+        if (eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV420_10BIT || eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444_10BIT)
+            if (IsCodecHEVC())
             {
                 config.encodeCodecConfig.hevcConfig.outputBitDepth = NV_ENC_BIT_DEPTH_10;
+            } else {
+                config.encodeCodecConfig.h264Config.outputBitDepth = NV_ENC_BIT_DEPTH_10;
             }
+        }
+        if (IsCodecHEVC()) {
+            config.encodeCodecConfig.hevcConfig.chromaFormatIDC = 1;
+        } else {
+            config.encodeCodecConfig.h264Config.chromaFormatIDC = 1;
         }
         if (bLowLatency) {
             pParams->tuningInfo = NV_ENC_TUNING_INFO_LOW_LATENCY;
@@ -249,8 +257,8 @@ public:
         }
 
         funcInit(pParams);
-        LOG(INFO) << NvEncoderInitParam().MainParamToString(pParams);
-        LOG(TRACE) << NvEncoderInitParam().FullParamToString(pParams);
+        LOG(INFO) << MainParamToString(pParams);
+        LOG(TRACE) << FullParamToString(pParams);
     }
 
 private:
@@ -269,7 +277,9 @@ private:
     std::string ConvertValueToString(const std::vector<T> &vValue, const std::string &strValueNames, T value) {
         auto it = std::find(vValue.begin(), vValue.end(), value);
         if (it == vValue.end()) {
-            LOG(ERROR) << "Invalid value. Can't convert to one of " << strValueNames;
+            std::cout << "Invalid value. Can't convert to one of " << strValueNames;
+            // This fails for some reason.
+            //LOG(ERROR) << "Invalid value. Can't convert to one of " << strValueNames;
             return std::string();
         }
         return split(strValueNames, ' ')[it - vValue.begin()];
