@@ -63,7 +63,8 @@ inline NVENCException NVENCException::makeNVENCException(const std::string& erro
         if( errorCode != NV_ENC_SUCCESS)                                                                           \
         {                                                                                                          \
             std::ostringstream errorLog;                                                                           \
-            errorLog << #nvencAPI << " returned error " << errorCode;                                              \
+            const char* details = m_nvenc.nvEncGetLastErrorString(m_hEncoder);                                     \
+            errorLog << #nvencAPI << " returned error " << errorCode << ": " << details;                           \
             throw NVENCException::makeNVENCException(errorLog.str(), errorCode, __FUNCTION__, __FILE__, __LINE__); \
         }                                                                                                          \
     } while (0)
