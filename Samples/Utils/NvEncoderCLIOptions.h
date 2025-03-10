@@ -236,10 +236,8 @@ public:
             throw std::invalid_argument(errmessage.str());
         }
 
-        {
-        if (eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV420_10BIT || eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444_10BIT)
-            if (IsCodecHEVC())
-            {
+        if (eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV420_10BIT || eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444_10BIT) {
+            if (IsCodecHEVC()) {
                 config.encodeCodecConfig.hevcConfig.outputBitDepth = NV_ENC_BIT_DEPTH_10;
             } else {
                 config.encodeCodecConfig.h264Config.outputBitDepth = NV_ENC_BIT_DEPTH_10;
