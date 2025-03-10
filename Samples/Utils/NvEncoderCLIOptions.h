@@ -242,6 +242,11 @@ public:
                 config.encodeCodecConfig.hevcConfig.outputBitDepth = NV_ENC_BIT_DEPTH_10;
             }
         }
+        if (bLowLatency) {
+            pParams->tuningInfo = NV_ENC_TUNING_INFO_LOW_LATENCY;
+        } else {
+            pParams->tuningInfo = NV_ENC_TUNING_INFO_HIGH_QUALITY;
+        }
 
         funcInit(pParams);
         LOG(INFO) << NvEncoderInitParam().MainParamToString(pParams);
