@@ -835,7 +835,7 @@ bool NvEncoder::ValidateGUIDs(GUID guidCodec, GUID presetGuid) {
     NVENC_API_CALL(m_nvenc.nvEncGetEncodePresetGUIDs(m_hEncoder, guidCodec, presets, presetCount, &outCount));
     if (presetCount != outCount) {
         std::cout << "outCount (" << outCount << ") did not match presetCount (" << presetCount << ")" << std::endl;
-        delete[] guids;
+        delete[] presets;
         return false;
     }
     for (int i = 0; i < presetCount; i++) {
@@ -844,7 +844,7 @@ bool NvEncoder::ValidateGUIDs(GUID guidCodec, GUID presetGuid) {
             break;
         }
     }
-    delete[] guids;
+    delete[] presets;
 
     if (!foundPresetGuid) {
         std::cout << "Could not find preset guid" << std::endl;
